@@ -190,3 +190,59 @@ def test_module_run_delegates_to_surf_report(mocker):
         lat=1.0, long=2.0, args=["placeholder", "json"]
     )
     assert result == {"ocean": "data"}
+
+# ---------------------------------------------------------------------------
+# CLI Argument parsing (_build_args_string & cli_main)
+# ---------------------------------------------------------------------------
+
+def test_build_args_string_with_flags():
+    from src.cli import _build_args_string
+    import argparse
+    ns = argparse.Namespace(
+        location="Santa Cruz",
+        forecast=3,
+        decimal=1,
+        color="blue",
+        metric=True,
+        imperial=False,
+        json=True,
+        gpt=False,
+        hide_wave=False,
+        hide_uv=False,
+        hide_height=False,
+        hide_direction=False,
+        hide_period=False,
+        hide_location=False,
+        hide_date=False,
+        show_large_wave=True,
+        show_past_uv=False,
+        show_height_history=False,
+        show_direction_history=False,
+        show_period_history=False,
+        show_air_temp=False,
+        show_wind_speed=False,
+        show_wind_direction=False,
+        show_rain_sum=False,
+        show_precipitation_prob=False,
+        show_cloud_cover=False,
+        show_visibility=False,
+    )
+    result = _build_args_string(ns)
+    assert "location=Santa_Cruz" in result
+    assert "forecast=3" in result
+    assert "decimal=1" in result
+    assert "color=blue" in result
+    assert "metric" in result
+    assert "json" in result
+    assert "show_large_wave" in result
+
+def test_cli_main(mocker):
+    from src.cli import cli_main
+    mocker.patch("sys.argv", ["surf", "--location", "Santa Cruz", "--forecast", "3", "--metric"])
+    mock_run = mocker.patch("src.cli.run")
+    cli_main()
+    mock_run.assert_called_once()
+    args_string = mock_run.call_args[1]["args"]
+    assert "location=Santa_Cruz" in args_string
+    assert "forecast=3" in args_string
+    assert "metric" in args_string
